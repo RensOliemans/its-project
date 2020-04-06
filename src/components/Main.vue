@@ -1,6 +1,6 @@
 <template>
     <div id="main">
-        <Input />
+        <Input @onSubmit="onSubmit" />
     </div>
 </template>
 
@@ -11,6 +11,13 @@ export default {
     name: "Main",
     components: {
         Input
+    },
+
+    methods: {
+        onSubmit(form) {
+            console.log(form);
+            alert(JSON.stringify(form));
+        }
     }
 }
 </script>
