@@ -1,22 +1,24 @@
 <template>
     <div id="input">
-        <b-form @submit="onSubmit" @reset="onReset" v-if="show">
+        <h1>Input</h1>
+        <b-form @reset="onReset" v-if="show">
             <b-form-group
-                id="input-grp-1"
-                label="Enter text"
-                label-for="text-input"
-                >
-                <b-form-input
-                    id="text-input"
-                    v-model="form.input"
-                    required
-                    placeholder="Input string"></b-form-input>
+                    id="input-grp-1"
+                    label="Enter text"
+                    label-for="text-input"
+            >
+                <b-form-textarea
+                        id="text-input"
+                        v-model="form.input"
+                        required
+                        rows="3"
+                        max-rows="6"
+                        placeholder="Input string"></b-form-textarea>
             </b-form-group>
-            <b-button size="sm" type="light" @click="convert">Convert to binary</b-button>
-            <br />
-
-            <b-button type="submit" variant="primary">Start</b-button>
-            <b-button type="reset" variant="danger">Reset</b-button>
+            <b-button-group vertical>
+                <b-button type="light" @click="convert">Convert to binary</b-button>
+                <b-button type="reset" variant="danger">Reset</b-button>
+            </b-button-group>
         </b-form>
 
     </div>
@@ -38,14 +40,20 @@
             }
         },
 
+        watch: {
+            'form.input': function() {
+                if (this.form.input)
+                    this.$emit('onSubmit', this.form.input);
+                else
+                    this.$emit('onSubmit', '');
+            }
+        },
+
         methods: {
-            onSubmit(evt) {
-                evt.preventDefault();
-                this.$emit('onSubmit', this.form)
-            },
             onReset(evt) {
                 evt.preventDefault();
                 this.form.input = '';
+                this.$emit('reset');
             },
             convert(evt) {
                 evt.preventDefault();

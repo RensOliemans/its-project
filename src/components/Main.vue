@@ -1,7 +1,10 @@
 <template>
     <div id="main">
-        <Input @onSubmit="onSubmit" />
-        <LempelZiv :input="msg"/>
+        <b-container>
+            <Input @onSubmit="onSubmit" @reset="resetAll" />
+            <LempelZiv :input="msg" :reset="reset"/>
+        </b-container>
+
     </div>
 </template>
 
@@ -18,15 +21,17 @@ export default {
 
     data() {
         return {
-            msg: ""
+            msg: "",
+            reset: 0
         }
     },
 
     methods: {
-        onSubmit(form) {
-            console.log(form);
-            this.msg = JSON.stringify(form)['input'];
-            alert(JSON.stringify(form));
+        onSubmit(input) {
+            this.msg = input;
+        },
+        resetAll() {
+            this.reset += 1;
         }
     }
 }

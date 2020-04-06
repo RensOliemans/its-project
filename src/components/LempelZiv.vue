@@ -1,6 +1,27 @@
 <template>
     <div id="LempelZiv">
-
+        <b-row>
+            <b-col>
+                <h1>Calculator</h1>
+                <b-button variant="primary" size="lg" @click="encodeAndDecode">Calculate</b-button>
+            </b-col>
+        </b-row>
+        <b-row>
+            <b-col>
+                <p>Received input:<br />
+                    {{ this.input }}</p>
+            </b-col>
+        </b-row>
+        <b-row>
+            <b-col>
+                <p>Encoded input:<br />
+                    {{ this.encoded }}</p>
+            </b-col>
+            <b-col>
+                <p>Output:<br />
+                    {{ this.decoded }}</p>
+            </b-col>
+        </b-row>
     </div>
 </template>
 
@@ -9,11 +30,34 @@
         name: "LempelZiv",
 
         props: {
-            input: String
+            input: String,
+            reset: Number,
+        },
+
+        data() {
+            return {
+                encoded: '',
+                decoded: '',
+            }
+        },
+
+        watch: {
+            'reset': function() {
+                this.encoded = '';
+                this.decoded = '';
+            }
         },
 
         methods: {
+            encodeAndDecode() {
+                if (this.input) {
+                    this.encoded = this.encode(this.input);
+                    this.decoded = this.decode(this.encoded);
+                }
+            },
             encode(s) {
+                if (!s)
+                    return;
                 var dict = {};
                 var data = (s + "").split("");
                 var out = [];
@@ -22,10 +66,12 @@
                 var code = 256;
                 var i, l;
                 for (i = 1, l = data.length; i < l; i++) {
+                    console.log(dict);
                     currChar = data[i];
                     if (dict[phrase + currChar] != null) {
                         phrase += currChar;
                     } else {
+                        console.log(phrase);
                         out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
                         dict[phrase + currChar] = code;
                         code++;
@@ -36,7 +82,31 @@
                 for (i = 0, l = out.length; i < l; i++) {
                     out[i] = String.fromCharCode(out[i]);
                 }
-                console.log(out.join(""));
+                return out.join("");
+            },
+            decode(s) {
+                if (!s)
+                    return;
+                var dict = {};
+                var data = (s + "").split("");
+                var currChar = data[0];
+                var oldPhrase = currChar;
+                var out = [currChar];
+                var code = 256;
+                var phrase;
+                for (var i = 1; i < data.length; i++) {
+                    var currCode = data[i].charCodeAt(0);
+                    if (currCode < 256) {
+                        phrase = data[i];
+                    } else {
+                        phrase = dict[currCode] ? dict[currCode] : (oldPhrase + currChar);
+                    }
+                    out.push(phrase);
+                    currChar = phrase.charAt(0);
+                    dict[code] = oldPhrase + currChar;
+                    code++;
+                    oldPhrase = phrase;
+                }
                 return out.join("");
             }
         }
