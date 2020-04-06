@@ -45,18 +45,19 @@
             },
             onReset(evt) {
                 evt.preventDefault();
-
                 this.form.input = '';
             },
             convert(evt) {
                 evt.preventDefault();
+                this.form.input = this.computeOutput(this.form.input);
+            },
+            computeOutput(input) {
                 let output = "";
-                const input = this.form.input;
                 for (let i = 0; i < input.length; i++) {
                     let binary = input[i].charCodeAt(0).toString(2);
-                    output += new Array(9 - binary.length).join('0') + binary + " ";
+                    output += new Array(9 - binary.length).join('0') + binary;
                 }
-                this.form.input = output;
+                return output;
             }
         }
     }
