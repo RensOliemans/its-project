@@ -2,7 +2,7 @@
     <div id="main">
         <b-container>
             <Input @onSubmit="onSubmit" @reset="resetAll" />
-            <LempelZiv :input="msg" :reset="reset"/>
+            <LempelZiv :input="msg" :reset="reset" />
         </b-container>
 
     </div>

@@ -53,6 +53,54 @@
                 if (this.input) {
                     this.encoded = this.encode(this.input);
                     this.decoded = this.decode(this.encoded);
+                    this.encode2(this.input);
+                }
+            },
+            encode2(s) {
+                if (!s)
+                    return;
+
+                const eof = "Q";
+                let dict = {};
+                let start = 1;
+                let data = (s + eof).split("");
+                let currChar;
+                let phrase = data[0];
+
+                let i = 0;
+                while (i <= data.length) {
+                    currChar = data[i];
+                    if (dict[phrase] == null) {
+                        dict[phrase] = {'index': start, 'previous': 0};
+                        phrase = currChar;
+                        start++;
+                        i++;
+                    } else {
+                        if (dict[phrase + currChar] == null) {
+                            dict[phrase + currChar] = {'index': start, 'previous': dict[phrase]['index']};
+                            phrase = currChar;
+                            start++;
+                            i++;
+                        } else {
+                            phrase += currChar;
+                        }
+                    }
+                }
+
+                for (let i = 1; i <= data.length; i++) {
+                    currChar = data[i];
+                    if (dict[phrase] == null) {
+                        dict[phrase] = 0;
+                        start++;
+                    } else {
+                        phrase += currChar;
+                        if (dict[phrase] != null) {
+                            dict[phrase + currChar] = start;
+                            start++;
+                        }
+                    }
+
+                    console.log(JSON.stringify(dict));
                 }
             },
             encode(s) {
@@ -66,12 +114,10 @@
                 var code = 256;
                 var i, l;
                 for (i = 1, l = data.length; i < l; i++) {
-                    console.log(dict);
                     currChar = data[i];
                     if (dict[phrase + currChar] != null) {
                         phrase += currChar;
                     } else {
-                        console.log(phrase);
                         out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
                         dict[phrase + currChar] = code;
                         code++;

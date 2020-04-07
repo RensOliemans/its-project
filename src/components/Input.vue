@@ -13,10 +13,9 @@
                         required
                         rows="3"
                         max-rows="6"
-                        placeholder="Input string"></b-form-textarea>
+                        placeholder="Input string (will be converted to binary automatically)"></b-form-textarea>
             </b-form-group>
             <b-button-group vertical>
-                <b-button type="light" @click="convert">Convert to binary</b-button>
                 <b-button type="reset" variant="danger">Reset</b-button>
             </b-button-group>
         </b-form>
@@ -42,10 +41,12 @@
 
         watch: {
             'form.input': function() {
-                if (this.form.input)
-                    this.$emit('onSubmit', this.form.input);
-                else
+                if (this.form.input) {
+                    let binaryInput = this.computeOutput(this.form.input);
+                    this.$emit('onSubmit', binaryInput);
+                } else {
                     this.$emit('onSubmit', '');
+                }
             }
         },
 
@@ -54,10 +55,6 @@
                 evt.preventDefault();
                 this.form.input = '';
                 this.$emit('reset');
-            },
-            convert(evt) {
-                evt.preventDefault();
-                this.form.input = this.computeOutput(this.form.input);
             },
             computeOutput(input) {
                 let output = "";
