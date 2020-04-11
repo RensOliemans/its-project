@@ -13,7 +13,7 @@
                         required
                         rows="3"
                         max-rows="6"
-                        placeholder="Input string (will be converted to binary automatically)"></b-form-textarea>
+                        placeholder="Input binary string"></b-form-textarea>
             </b-form-group>
             <b-button-group vertical>
                 <b-button type="reset" variant="danger">Reset</b-button>
@@ -41,9 +41,9 @@
 
         watch: {
             'form.input': function() {
-                if (this.form.input) {
-                    let binaryInput = this.computeOutput(this.form.input);
-                    this.$emit('onSubmit', binaryInput);
+                if (this.form.input && this.validate(this.form.input)) {
+                    // let binaryInput = this.computeOutput(this.form.input);
+                    this.$emit('onSubmit', this.form.input);
                 } else {
                     this.$emit('onSubmit', '');
                 }
@@ -55,6 +55,9 @@
                 evt.preventDefault();
                 this.form.input = '';
                 this.$emit('reset');
+            },
+            validate(input) {
+                return input.search(/^[01]+$/) !== -1;
             },
             computeOutput(input) {
                 let output = "";
