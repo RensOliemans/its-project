@@ -8,6 +8,24 @@
         </b-row>
         <b-row>
             <b-col>
+                <h3>Current Step</h3>
+            </b-col>
+        </b-row>
+        <b-row>
+            <b-col>
+                <p>Indices currently looking at:<br />
+                   {{ this.currentLookingIndices }}</p>
+            </b-col>
+            <b-col>
+                <p>Current state of dictionary:<br />
+                   {{ this.dict }}</p>
+            </b-col>
+            <b-col>
+                <b-button variant="secondary" @click="nextStep">Next Step</b-button>
+            </b-col>
+        </b-row>
+        <b-row>
+            <b-col>
                 <p>Received input:<br />
                     {{ this.input }}</p>
             </b-col>
@@ -38,6 +56,9 @@
             return {
                 encoded: '',
                 decoded: '',
+                currentLookingIndices: 0,
+                dict: [],
+                doNextStep: false,
             }
         },
 
@@ -45,6 +66,8 @@
             'reset': function() {
                 this.encoded = '';
                 this.decoded = '';
+                this.currentLookingIndices = 0;
+                this.dict = [];
             }
         },
 
@@ -53,55 +76,75 @@
                 if (this.input) {
                     this.encoded = this.encode(this.input);
                     this.decoded = this.decode(this.encoded);
-                    this.encode2(this.input);
+                    this.encode3(this.input);
                 }
             },
-            encode2(s) {
-                if (!s)
-                    return;
-
-                const eof = "Q";
-                let dict = {};
-                let start = 1;
-                let data = (s + eof).split("");
-                let currChar;
-                let phrase = data[0];
-
+            async encode3(s) {
+                const sleep = (milliseconds) => {
+                    return new Promise(resolve => setTimeout(resolve, milliseconds));
+                };
                 let i = 0;
+                let n = 1;
+                let final_dict = {};
+                let indices = {};
+                let chars = s[i];
+                let prev_index = 0;
+                const eof = "Q";
+                let data = (s + eof);
+                let unmatched = 0;
+                let result = [];
                 while (i <= data.length) {
-                    currChar = data[i];
-                    if (dict[phrase] == null) {
-                        dict[phrase] = {'index': start, 'previous': 0};
-                        phrase = currChar;
-                        start++;
-                        i++;
+                    if (!this.doNextStep) {
+                        await sleep(500);
+                        continue;
+                    }
+                    this.doNextStep = false;
+                    if (data[i] === eof) {
+                        console.log('eof');
+                        break;
+                    }
+                    console.log('i: ' + i);
+                    console.log('chars: ' + chars);
+
+                    let index_matched = this.find_first_match(indices, chars);
+                    if (index_matched === 0) {
+                        indices[n] = [prev_index, chars];
+                        const lastChar = parseInt(chars[chars.length - 1]);
+                        final_dict[n] = [prev_index, lastChar];
+                        result.push([prev_index, lastChar]);
+                        this.dict = result;
+                        i += chars.length;
+                        this.currentLookingIndices = i;
+                        n += 1;
+                        chars = data[i];
+                        unmatched = 0;
+                        prev_index = 0;
                     } else {
-                        if (dict[phrase + currChar] == null) {
-                            dict[phrase + currChar] = {'index': start, 'previous': dict[phrase]['index']};
-                            phrase = currChar;
-                            start++;
-                            i++;
-                        } else {
-                            phrase += currChar;
-                        }
+                        unmatched += 1;
+                        prev_index = index_matched;
+                        this.currentLookingIndices = i + '-' + (i + unmatched);
+                        chars += data[i+unmatched];
+                    }
+                    console.log('indices: '+ JSON.stringify(indices));
+                    console.log('dict: '+ JSON.stringify(final_dict));
+                    console.log();
+                }
+                console.log('final indices:' + JSON.stringify(indices));
+                console.log('final dict:   ' + JSON.stringify(final_dict));
+                console.log('result:       ' + JSON.stringify(result));
+            },
+            find_first_match(indices, chars) {
+                for (const [key, value] of Object.entries(indices)) {
+                    if (chars === value[1]) {
+                        console.log('match:' + key);
+                        return key;
                     }
                 }
-
-                for (let i = 1; i <= data.length; i++) {
-                    currChar = data[i];
-                    if (dict[phrase] == null) {
-                        dict[phrase] = 0;
-                        start++;
-                    } else {
-                        phrase += currChar;
-                        if (dict[phrase] != null) {
-                            dict[phrase + currChar] = start;
-                            start++;
-                        }
-                    }
-
-                    console.log(JSON.stringify(dict));
-                }
+                console.log('match:none');
+                return 0;
+            },
+            nextStep() {
+                this.doNextStep = true;
             },
             encode(s) {
                 if (!s)
