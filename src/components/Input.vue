@@ -45,7 +45,7 @@
                     // let binaryInput = this.computeOutput(this.form.input);
                     this.$emit('onSubmit', this.form.input);
                 } else {
-                    this.$emit('onSubmit', '');
+                    this.$emit('onSubmit', 'Enter a binary string');
                 }
             }
         },

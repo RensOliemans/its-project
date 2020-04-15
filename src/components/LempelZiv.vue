@@ -1,16 +1,16 @@
 <template>
     <div id="LempelZiv">
+        <div class="dropdown-divider"></div>
         <b-row>
             <b-col>
-                <h1>Calculator</h1>
-                <b-button variant="primary" size="lg" @click="encodeAndDecode">Calculate</b-button>
+                <b-button variant="primary" size="lg" @click="encodeAndDecode">Start Calculating</b-button>
             </b-col>
-        </b-row>
-        <b-row>
             <b-col>
-                <h3>Current Step</h3>
+                <p>Received input:<br />
+                    {{ this.input }}</p>
             </b-col>
         </b-row>
+        <div class="dropdown-divider"></div>
         <b-row>
             <b-col>
                 <p>Indices currently looking at:<br />
@@ -26,18 +26,8 @@
         </b-row>
         <b-row>
             <b-col>
-                <p>Received input:<br />
-                    {{ this.input }}</p>
-            </b-col>
-        </b-row>
-        <b-row>
-            <b-col>
                 <p>Encoded input:<br />
                     {{ this.encoded }}</p>
-            </b-col>
-            <b-col>
-                <p>Output:<br />
-                    {{ this.decoded }}</p>
             </b-col>
         </b-row>
     </div>
@@ -73,9 +63,10 @@
 
         methods: {
             encodeAndDecode() {
+                this.encoded = '';
+                this.currentLookingIndices = 0;
+                this.dict = [];
                 if (this.input) {
-                    this.encoded = this.encode(this.input);
-                    this.decoded = this.decode(this.encoded);
                     this.encode3(this.input);
                 }
             },
@@ -93,55 +84,70 @@
                 let data = (s + eof);
                 let unmatched = 0;
                 let result = [];
-                while (i <= data.length) {
+                while (i < data.length) {
+                    if (data[i] === eof) {
+                        break;
+                    }
                     if (!this.doNextStep) {
+                        // Allow for calculating the result step-by-step.
                         await sleep(500);
                         continue;
                     }
                     this.doNextStep = false;
-                    if (data[i] === eof) {
-                        console.log('eof');
-                        break;
-                    }
-                    console.log('i: ' + i);
-                    console.log('chars: ' + chars);
 
+                    // Finds a match of the currently looking chars
                     let index_matched = this.find_first_match(indices, chars);
                     if (index_matched === 0) {
-                        indices[n] = [prev_index, chars];
-                        const lastChar = parseInt(chars[chars.length - 1]);
+                        // Not found, save chars in dictionary
+                        const lastChar = this.determineChar(chars[chars.length - 1]);
                         final_dict[n] = [prev_index, lastChar];
-                        result.push([prev_index, lastChar]);
-                        this.dict = result;
+                        result.push([parseInt(prev_index), lastChar]);
+                        indices[n] = [parseInt(prev_index), chars];
+
+                        // Setup for next codeword
                         i += chars.length;
-                        this.currentLookingIndices = i;
                         n += 1;
                         chars = data[i];
                         unmatched = 0;
                         prev_index = 0;
+
+                        // Update props
+                        this.dict = result;
+                        this.currentLookingIndices = i;
                     } else {
+                        // It was found, so look at the next char as well
                         unmatched += 1;
-                        prev_index = index_matched;
-                        this.currentLookingIndices = i + '-' + (i + unmatched);
                         chars += data[i+unmatched];
+
+                        prev_index = index_matched;
+
+                        // Update props
+                        this.currentLookingIndices = i + '-' + (i + unmatched);
                     }
-                    console.log('indices: '+ JSON.stringify(indices));
-                    console.log('dict: '+ JSON.stringify(final_dict));
-                    console.log();
                 }
-                console.log('final indices:' + JSON.stringify(indices));
-                console.log('final dict:   ' + JSON.stringify(final_dict));
-                console.log('result:       ' + JSON.stringify(result));
+
+                // Neatly
+                let concatenated = [].concat.apply([], result);
+                if (concatenated[concatenated.length - 1] === 'eof') {
+                    concatenated = concatenated.slice(0, concatenated.length - 1);
+                }
+                this.encoded = concatenated.join("");
             },
             find_first_match(indices, chars) {
+                // This method finds 'chars' in the existing 'indices' (all previous matches)
                 for (const [key, value] of Object.entries(indices)) {
                     if (chars === value[1]) {
-                        console.log('match:' + key);
                         return key;
                     }
                 }
-                console.log('match:none');
                 return 0;
+            },
+            determineChar(char) {
+                // Returns 'eof' if the char is end-of-file, otherwise parsed int
+                if (char === 'Q') {
+                    return 'eof'
+                }
+                return parseInt(char);
             },
             nextStep() {
                 this.doNextStep = true;
