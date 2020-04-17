@@ -41,7 +41,7 @@
             <b-col>
                 <div>
                     <p>Result (encoded input), in integers:<br />
-                        {{ this.encoded }}
+                        {{ this.encoded.replace(/ /g, '') }}
                     </p>
                 </div>
                 <div>
@@ -151,7 +151,7 @@
                 if (concatenated[concatenated.length - 1] === 'eof') {
                     concatenated = concatenated.slice(0, concatenated.length - 1);
                 }
-                this.encoded = concatenated.join("");
+                this.encoded = concatenated.join(" ");
             },
             find_first_match(indices, chars) {
                 // This method finds 'chars' in the existing 'indices' (all previous matches)
@@ -173,7 +173,29 @@
                 return input.search(/^[01]+$/) !== -1;
             },
             convert(input) {
-                return input;
+                if (input) {
+                    let output = '';
+                    const amountOfBits = (x) => function() {
+                        if (x === 0)
+                            return 0;
+                        return Math.ceil(Math.log2(x));
+                    }();
+                    const convertToBinary = (x, num) => function() {
+                        if (num === 0)
+                            return '';
+                        let bin = x.toString(2);
+                        return new Array((num+1) - bin.length).join('0') + bin;
+                    }();
+                    this.dict.forEach(function(value, index) {
+                        let prevIndex = value[0];
+                        let nextBit = value[1];
+                        console.log('prev: ' + prevIndex);
+                        console.log('prev to bin: ' + convertToBinary(prevIndex, amountOfBits(index + 1)));
+                        output += convertToBinary(prevIndex, amountOfBits(index + 1)) + '' + nextBit;
+                        console.log(output);
+                    });
+                    return output;
+                }
             },
             calculateIndices(prev_index, unmatched, indices) {
                 let range = (x, y) => Array.from((function*() {
@@ -188,33 +210,6 @@
                 }();
                 let elementsBeforePrevIndex = calculateBefore(prev_index, indices);
                 return range(elementsBeforePrevIndex, elementsBeforePrevIndex + (unmatched - 1));
-            },
-            encode(s) {
-                if (!s)
-                    return;
-                var dict = {};
-                var data = (s + "").split("");
-                var out = [];
-                var currChar;
-                var phrase = data[0];
-                var code = 256;
-                var i, l;
-                for (i = 1, l = data.length; i < l; i++) {
-                    currChar = data[i];
-                    if (dict[phrase + currChar] != null) {
-                        phrase += currChar;
-                    } else {
-                        out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
-                        dict[phrase + currChar] = code;
-                        code++;
-                        phrase = currChar;
-                    }
-                }
-                out.push(phrase.length > 1 ? dict[phrase] : phrase.charCodeAt(0));
-                for (i = 0, l = out.length; i < l; i++) {
-                    out[i] = String.fromCharCode(out[i]);
-                }
-                return out.join("");
             },
             decode(s) {
                 if (!s)
