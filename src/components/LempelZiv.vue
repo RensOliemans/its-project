@@ -21,12 +21,15 @@
                    {{ this.dict }}</p>
             </b-col>
             <b-col>
-                <b-button variant="secondary" @click="nextStep">Next Step</b-button>
+                <p>Enter delay. Current delay: {{ this.delay }}</p>
+                <b-input-group prepend="0" append="1000" class="mt-3">
+                    <b-form-input type="range" min="0" max="1000" v-model="delay"></b-form-input>
+                </b-input-group>
             </b-col>
         </b-row>
         <b-row>
             <b-col>
-                <p>Encoded input:<br />
+                <p>Result (encoded input):<br />
                     {{ this.encoded }}</p>
             </b-col>
         </b-row>
@@ -48,7 +51,7 @@
                 decoded: '',
                 currentLookingIndices: 0,
                 dict: [],
-                doNextStep: false,
+                delay: 500,
             }
         },
 
@@ -58,6 +61,7 @@
                 this.decoded = '';
                 this.currentLookingIndices = 0;
                 this.dict = [];
+                this.delay = 500;
             }
         },
 
@@ -88,12 +92,7 @@
                     if (data[i] === eof) {
                         break;
                     }
-                    if (!this.doNextStep) {
-                        // Allow for calculating the result step-by-step.
-                        await sleep(500);
-                        continue;
-                    }
-                    this.doNextStep = false;
+                    await sleep(this.delay);
 
                     // Finds a match of the currently looking chars
                     let index_matched = this.find_first_match(indices, chars);
@@ -148,9 +147,6 @@
                     return 'eof'
                 }
                 return parseInt(char);
-            },
-            nextStep() {
-                this.doNextStep = true;
             },
             encode(s) {
                 if (!s)
