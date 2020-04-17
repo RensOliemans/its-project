@@ -1,9 +1,9 @@
 <template>
     <div id="main">
-        <b-container>
+        <b-container fluid="xl">
             <Front />
-            <Input @onSubmit="onSubmit" @reset="resetAll" />
-            <LempelZiv :input="msg" :reset="reset" />
+            <Input @onSubmit="onSubmit" />
+            <LempelZiv :input="msg" />
         </b-container>
 
     </div>
@@ -25,7 +25,6 @@ export default {
     data() {
         return {
             msg: "",
-            reset: 0
         }
     },
 
@@ -33,9 +32,6 @@ export default {
         onSubmit(input) {
             this.msg = input;
         },
-        resetAll() {
-            this.reset += 1;
-        }
     }
 }
 </script>

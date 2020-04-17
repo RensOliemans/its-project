@@ -11,13 +11,10 @@
                         id="text-input"
                         v-model="form.input"
                         required
-                        rows="3"
+                        rows="1"
                         max-rows="6"
                         placeholder="Input binary string"></b-form-textarea>
             </b-form-group>
-            <b-button-group vertical>
-                <b-button type="reset" variant="danger">Reset</b-button>
-            </b-button-group>
         </b-form>
 
     </div>
