@@ -1,36 +1,55 @@
 <template>
     <div id="LempelZiv">
         <div class="dropdown-divider"></div>
-        <b-row>
+        <b-row class="lempel-row">
             <b-col>
-                <b-button variant="primary" size="lg" @click="encodeAndDecode">Start Calculating</b-button>
-            </b-col>
-            <b-col>
-                <p>Received input:<br />
-                    {{ this.input }}</p>
+                <b-button variant="primary" size="lg" @click="encodeAndDecode">Start Encoding</b-button>
             </b-col>
         </b-row>
-        <div class="dropdown-divider"></div>
         <b-row>
             <b-col>
-                <p>Indices currently looking at:<br />
-                   {{ this.currentLookingIndices }}</p>
+                <p>Received input:</p>
+                <div v-if="this.validate(this.input)" class="binary-input">
+                    <b-list-group horizontal class="justify-content-center binary-input">
+                        <b-list-group-item
+                                v-for="(char, index) in this.input"
+                                :key="index"
+                                :active="currentLookingIndices.includes(index)"
+                                :class="matchedIndices.includes(index) ? 'matched' : ''"
+                        >
+                            {{ char.valueOf() }}
+                        </b-list-group-item>
+                    </b-list-group>
+                </div>
+                <div v-else>Enter a binary string</div>
             </b-col>
+        </b-row>
+        <b-row class="lempel-row">
             <b-col>
                 <p>Current state of dictionary:<br />
-                   {{ this.dict }}</p>
+                    {{ this.dict }}
+                </p>
             </b-col>
             <b-col>
                 <p>Enter delay. Current delay: {{ this.delay }}</p>
-                <b-input-group prepend="0" append="1000" class="mt-3">
-                    <b-form-input type="range" min="0" max="1000" v-model="delay"></b-form-input>
+                <b-input-group prepend="0" append="2000" class="mt-3">
+                    <b-form-input type="range" min="0" max="2000" v-model="delay"></b-form-input>
                 </b-input-group>
             </b-col>
         </b-row>
-        <b-row>
+        <b-row class="lempel-row">
             <b-col>
-                <p>Result (encoded input):<br />
-                    {{ this.encoded }}</p>
+                <div>
+                    <p>Result (encoded input), in integers:<br />
+                        {{ this.encoded }}
+                    </p>
+                </div>
+                <div>
+                    <p>Result (encoded input), in binary:<br />
+                        {{ convert(this.encoded) }}
+                    </p>
+                </div>
+
             </b-col>
         </b-row>
     </div>
@@ -49,7 +68,8 @@
             return {
                 encoded: '',
                 decoded: '',
-                currentLookingIndices: 0,
+                currentLookingIndices: [],
+                matchedIndices: [],
                 dict: [],
                 delay: 500,
             }
@@ -59,7 +79,8 @@
             'reset': function() {
                 this.encoded = '';
                 this.decoded = '';
-                this.currentLookingIndices = 0;
+                this.currentLookingIndices = [];
+                this.matchedIndices = [];
                 this.dict = [];
                 this.delay = 500;
             }
@@ -68,7 +89,6 @@
         methods: {
             encodeAndDecode() {
                 this.encoded = '';
-                this.currentLookingIndices = 0;
                 this.dict = [];
                 if (this.input) {
                     this.encode3(this.input);
@@ -79,8 +99,8 @@
                     return new Promise(resolve => setTimeout(resolve, milliseconds));
                 };
                 let i = 0;
+                this.currentLookingIndices = [i];
                 let n = 1;
-                let final_dict = {};
                 let indices = {};
                 let chars = s[i];
                 let prev_index = 0;
@@ -99,7 +119,6 @@
                     if (index_matched === 0) {
                         // Not found, save chars in dictionary
                         const lastChar = this.determineChar(chars[chars.length - 1]);
-                        final_dict[n] = [prev_index, lastChar];
                         result.push([parseInt(prev_index), lastChar]);
                         indices[n] = [parseInt(prev_index), chars];
 
@@ -112,16 +131,18 @@
 
                         // Update props
                         this.dict = result;
-                        this.currentLookingIndices = i;
+                        this.currentLookingIndices = [i];
+                        this.matchedIndices = [];
                     } else {
                         // It was found, so look at the next char as well
                         unmatched += 1;
                         chars += data[i+unmatched];
 
-                        prev_index = index_matched;
+                        prev_index = parseInt(index_matched);
 
                         // Update props
-                        this.currentLookingIndices = i + '-' + (i + unmatched);
+                        this.matchedIndices = this.calculateIndices(prev_index, unmatched, indices);
+                        this.currentLookingIndices.push(i+unmatched);
                     }
                 }
 
@@ -147,6 +168,26 @@
                     return 'eof'
                 }
                 return parseInt(char);
+            },
+            validate(input) {
+                return input.search(/^[01]+$/) !== -1;
+            },
+            convert(input) {
+                return input;
+            },
+            calculateIndices(prev_index, unmatched, indices) {
+                let range = (x, y) => Array.from((function*() {
+                    while (x <= y) yield x++;
+                })());
+                let calculateBefore = (prev, ind) => function() {
+                    let total = 0;
+                    for (let i = 1; i < prev; i++) {
+                        total += ind[i][1].length;
+                    }
+                    return total;
+                }();
+                let elementsBeforePrevIndex = calculateBefore(prev_index, indices);
+                return range(elementsBeforePrevIndex, elementsBeforePrevIndex + (unmatched - 1));
             },
             encode(s) {
                 if (!s)
@@ -205,5 +246,13 @@
 </script>
 
 <style scoped>
-
+    .lempel-row {
+        margin: 25px;
+    }
+    .matched {
+        background-color: lightgray;
+    }
+    .binary-input {
+        flex-wrap: wrap;
+    }
 </style>

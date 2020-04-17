@@ -1,10 +1,10 @@
 <template>
     <div id="input">
-        <h1>Input</h1>
+        <h2>Input</h2>
         <b-form @reset="onReset" v-if="show">
             <b-form-group
                     id="input-grp-1"
-                    label="Enter text"
+                    label="Enter binary string"
                     label-for="text-input"
             >
                 <b-form-textarea
